@@ -1,0 +1,3 @@
+# Python on Windows has no built-in curses module; this package adds it.
+# On Linux and macOS curses is built in, so nothing is installed there.
+windows-curses; sys_platform == "win32"

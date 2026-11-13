@@ -16,7 +16,10 @@ import xml.etree.ElementTree as ET
 
 
 FEEDS = (
-    ("r/technology (top today)", "https://www.reddit.com/r/technology/top/.rss?t=day&limit=25"),
+    (
+        "r/technology (top today)",
+        "https://www.reddit.com/r/technology/top/.rss?t=day&limit=25",
+    ),
     ("Hacker News (popular)", "https://hnrss.org/frontpage?points=100"),
 )
 SAVED_FEEDS = Path.home() / ".tech-news-reader-feeds.json"
@@ -62,7 +65,9 @@ class FeedLinksParser(HTMLParser):
         elif tag == "link":
             rel = attributes.get("rel", "").lower().split()
             feed_type = attributes.get("type", "").lower()
-            if "alternate" in rel and any(kind in feed_type for kind in ("rss", "atom")):
+            if "alternate" in rel and any(
+                kind in feed_type for kind in ("rss", "atom")
+            ):
                 href = attributes.get("href")
                 if href:
                     self.feeds.append((href, attributes.get("title", "")))
@@ -79,10 +84,36 @@ class FeedLinksParser(HTMLParser):
 
 class ArticleTextParser(HTMLParser):
     BLOCK_TAGS = {
-        "article", "blockquote", "br", "dd", "div", "dl", "dt", "h1", "h2",
-        "h3", "h4", "h5", "h6", "li", "ol", "p", "section", "ul",
+        "article",
+        "blockquote",
+        "br",
+        "dd",
+        "div",
+        "dl",
+        "dt",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "li",
+        "ol",
+        "p",
+        "section",
+        "ul",
     }
-    SKIP_TAGS = {"aside", "button", "footer", "form", "header", "nav", "script", "style", "svg"}
+    SKIP_TAGS = {
+        "aside",
+        "button",
+        "footer",
+        "form",
+        "header",
+        "nav",
+        "script",
+        "style",
+        "svg",
+    }
 
     def __init__(self):
         super().__init__()
@@ -164,7 +195,10 @@ def search_feeds(query, timeout, result_limit=10):
                 print(f"Skipping {page_url}: {error}", file=sys.stderr)
                 continue
             candidates = [
-                (urljoin(page_url, feed_url), title or page_parser.title or result_title)
+                (
+                    urljoin(page_url, feed_url),
+                    title or page_parser.title or result_title,
+                )
                 for feed_url, title in page_parser.feeds
             ]
 
@@ -240,9 +274,7 @@ def save_read_articles(read_articles):
 
 
 def save_feeds(feeds):
-    existing = [
-        {"name": name, "url": url} for name, url in load_saved_feeds()
-    ]
+    existing = [{"name": name, "url": url} for name, url in load_saved_feeds()]
     known_urls = {feed["url"] for feed in existing}
     for feed in feeds:
         if feed["url"] not in known_urls:
@@ -278,7 +310,11 @@ def read_feed(name, url, timeout):
         )
         if title and link:
             articles.append(
-                {"title": _clean_text(title), "link": link, "summary": _clean_text(summary)}
+                {
+                    "title": _clean_text(title),
+                    "link": link,
+                    "summary": _clean_text(summary),
+                }
             )
     return articles
 
@@ -293,9 +329,7 @@ def read_article(url, timeout):
     return "\n\n".join(paragraph for paragraph in paragraphs if paragraph)
 
 
-def browse_feeds(
-    feeds, timeout, limit, input_fn=input, output=print
-):
+def browse_feeds(feeds, timeout, limit, input_fn=input, output=print):
     while True:
         output("\nFeeds")
         for index, (name, _) in enumerate(feeds, start=1):
@@ -382,8 +416,12 @@ def _terminal_ui(screen, feeds, timeout, limit, read_articles):
         feed_title = "Search results" if showing_search_results else "Subscriptions"
         _draw_text(screen, 2, 1, feed_title, width - 2)
         visible_feeds = max(1, split - 4)
-        feed_start = max(0, min(feed_index - visible_feeds + 1, len(feed_items) - visible_feeds))
-        for offset, (name, url) in enumerate(feed_items[feed_start:feed_start + visible_feeds]):
+        feed_start = max(
+            0, min(feed_index - visible_feeds + 1, len(feed_items) - visible_feeds)
+        )
+        for offset, (name, url) in enumerate(
+            feed_items[feed_start : feed_start + visible_feeds]
+        ):
             index = feed_start + offset
             attr = curses.A_REVERSE if focus == "feeds" and index == feed_index else 0
             subscribed = url in {feed_url for _, feed_url in subscriptions}
@@ -394,37 +432,73 @@ def _terminal_ui(screen, feeds, timeout, limit, read_articles):
             marker = f" [{unread}]" if url in cached_stories else ""
             label = "[*]" if subscribed else "[+]"
             _draw_text(
-                screen, 3 + offset, 2, f"{index + 1}. {label} {name}{marker}",
-                width - 4, attr,
+                screen,
+                3 + offset,
+                2,
+                f"{index + 1}. {label} {name}{marker}",
+                width - 4,
+                attr,
             )
 
         if article_lines is not None:
             article_title = stories[story_index]["title"]
-            _draw_text(screen, split, 1, f"Article: {article_title} (Esc to return)", width - 2)
+            _draw_text(
+                screen, split, 1, f"Article: {article_title} (Esc to return)", width - 2
+            )
             visible_stories = max(1, height - split - 3)
-            for offset, line in enumerate(article_lines[scroll:scroll + visible_stories]):
+            for offset, line in enumerate(
+                article_lines[scroll : scroll + visible_stories]
+            ):
                 _draw_text(screen, split + 1 + offset, 2, line, width - 4)
         else:
             _draw_text(screen, split, 1, "Stories", width - 2)
             if feed_items:
-                _draw_text(screen, split + 1, 2, f"RSS: {feed_items[feed_index][1]}", width - 4)
+                _draw_text(
+                    screen, split + 1, 2, f"RSS: {feed_items[feed_index][1]}", width - 4
+                )
             if not stories:
-                hint = "Select a feed and press Enter to refresh it." if feed_items else "Search for a topic above."
+                hint = (
+                    "Select a feed and press Enter to refresh it."
+                    if feed_items
+                    else "Search for a topic above."
+                )
                 _draw_text(screen, split + 2, 2, hint, width - 4)
             else:
                 visible_stories = max(1, height - split - 4)
-                story_start = max(0, min(story_index - visible_stories + 1, len(stories) - visible_stories))
-                for offset, story in enumerate(stories[story_start:story_start + visible_stories]):
+                story_start = max(
+                    0,
+                    min(
+                        story_index - visible_stories + 1,
+                        len(stories) - visible_stories,
+                    ),
+                )
+                for offset, story in enumerate(
+                    stories[story_start : story_start + visible_stories]
+                ):
                     index = story_start + offset
-                    attr = curses.A_REVERSE if focus == "stories" and index == story_index else 0
-                    marker = " " if story["link"] in read_articles.get(active_feed_url, set()) else "*"
+                    attr = (
+                        curses.A_REVERSE
+                        if focus == "stories" and index == story_index
+                        else 0
+                    )
+                    marker = (
+                        " "
+                        if story["link"] in read_articles.get(active_feed_url, set())
+                        else "*"
+                    )
                     _draw_text(
-                        screen, split + 2 + offset, 2,
-                        f"{index + 1}. {marker} {story['title']}", width - 4, attr,
+                        screen,
+                        split + 2 + offset,
+                        2,
+                        f"{index + 1}. {marker} {story['title']}",
+                        width - 4,
+                        attr,
                     )
 
         _draw_text(
-            screen, height - 1, 0,
+            screen,
+            height - 1,
+            0,
             "Tab panes | Enter select/open | s subscribe | x remove | m read/unread | * unread | / search | q quit",
             width - 1,
         )
@@ -449,12 +523,17 @@ def _terminal_ui(screen, feeds, timeout, limit, read_articles):
                 status = "Choose another story or use Tab to switch panes."
             elif key in ("KEY_UP",) or (isinstance(key, int) and key == curses.KEY_UP):
                 scroll = max(0, scroll - 1)
-            elif key in ("KEY_DOWN",) or (isinstance(key, int) and key == curses.KEY_DOWN):
+            elif key in ("KEY_DOWN",) or (
+                isinstance(key, int) and key == curses.KEY_DOWN
+            ):
                 scroll = min(max(0, len(article_lines) - visible_stories), scroll + 1)
             elif isinstance(key, int) and key == curses.KEY_PPAGE:
                 scroll = max(0, scroll - visible_stories)
             elif isinstance(key, int) and key == curses.KEY_NPAGE:
-                scroll = min(max(0, len(article_lines) - visible_stories), scroll + visible_stories)
+                scroll = min(
+                    max(0, len(article_lines) - visible_stories),
+                    scroll + visible_stories,
+                )
             continue
 
         if key == "\x03" or (key == "q" and focus != "search"):
@@ -490,7 +569,11 @@ def _terminal_ui(screen, feeds, timeout, limit, read_articles):
                 if url not in subscribed_urls:
                     status = f"{name} is not in your subscriptions."
                     continue
-                updated = [(feed_name, feed_url) for feed_name, feed_url in subscriptions if feed_url != url]
+                updated = [
+                    (feed_name, feed_url)
+                    for feed_name, feed_url in subscriptions
+                    if feed_url != url
+                ]
                 try:
                     save_subscriptions(updated)
                 except OSError as error:
@@ -567,7 +650,8 @@ def _terminal_ui(screen, feeds, timeout, limit, read_articles):
                 focus = "feeds"
                 status = (
                     f"Found {len(feed_items)} feed(s). Press s to subscribe."
-                    if feed_items else "No RSS or Atom feeds found."
+                    if feed_items
+                    else "No RSS or Atom feeds found."
                 )
                 if warnings.getvalue():
                     status += " Some websites could not be checked."
@@ -579,8 +663,17 @@ def _terminal_ui(screen, feeds, timeout, limit, read_articles):
                     cached_stories[url] = stories
                     story_index = 0
                     focus = "stories"
-                    status = f"Loaded {len(stories)} stories from {name}." if stories else "This feed has no stories."
-                except (urllib.error.URLError, ET.ParseError, TimeoutError, OSError) as error:
+                    status = (
+                        f"Loaded {len(stories)} stories from {name}."
+                        if stories
+                        else "This feed has no stories."
+                    )
+                except (
+                    urllib.error.URLError,
+                    ET.ParseError,
+                    TimeoutError,
+                    OSError,
+                ) as error:
                     status = f"Could not load feed: {error}"
             elif focus == "stories" and stories:
                 story = stories[story_index]
@@ -625,10 +718,17 @@ def main():
         help="save discovered feeds for future reading (use with --search)",
     )
     parser.add_argument(
-        "-n", "--limit", type=int, default=10, help="stories to show per feed (default: 10)"
+        "-n",
+        "--limit",
+        type=int,
+        default=10,
+        help="stories to show per feed (default: 10)",
     )
     parser.add_argument(
-        "--timeout", type=float, default=10, help="request timeout in seconds (default: 10)"
+        "--timeout",
+        type=float,
+        default=10,
+        help="request timeout in seconds (default: 10)",
     )
     parser.add_argument(
         "--interactive", action="store_true", help="open the split-pane feed reader"
