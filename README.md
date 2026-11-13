@@ -6,19 +6,26 @@ A really simple Python RSS reader: fetch and display RSS feeds, search for a key
 
 On Linux and macOS there is nothing to install.
 
-On Windows, Python has no built-in `curses` module, so install it first:
+On Windows, Python has no built-in `curses` module, so install it first.
+`windows-curses` only supports Python up to 3.14 for now, so use the `py`
+launcher to pick 3.14:
 
-```sh
-python -m pip install -r requirements.txt
-python -3.14 main.py
+```powershell
+py -3.14 -m pip install -r requirements.txt
 ```
-
-Note: `windows-curses` currently supports Python up to 3.14.
 
 ## Run
 
+Linux / macOS:
+
 ```sh
-python main.py
+python3 main.py
+```
+
+Windows:
+
+```powershell
+py -3.14 main.py
 ```
 
 Enjoy!
