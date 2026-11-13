@@ -10,6 +10,7 @@ On Windows, Python has no built-in `curses` module, so install it first:
 
 ```sh
 python -m pip install -r requirements.txt
+python -3.14 main.py
 ```
 
 Note: `windows-curses` currently supports Python up to 3.14.
